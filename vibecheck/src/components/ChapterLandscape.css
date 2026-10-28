@@ -1,0 +1,34 @@
+/* Original pixel scenery, drawn on a small integer grid and enlarged crisply. */
+.trail-scene.chapter-scene { height: auto; aspect-ratio: 384 / 196; background: #45405b; border-bottom: 4px solid #3a3549; }
+.chapter-scene .chapter-pixel-world { image-rendering: pixelated; }
+.chapter-scene .chapter-star { animation: chapter-twinkle 4s steps(3, end) infinite alternate; }
+.chapter-scene .chapter-firefly { animation: chapter-drift 7s steps(7, end) infinite alternate; }
+.chapter-scene .chapter-window { animation: chapter-warmth 4s steps(3, end) infinite alternate; }
+.chapter-scene .chapter-smoke { animation: chapter-smoke 5s steps(5, end) infinite; }
+.chapter-scene .chapter-rain { animation: chapter-rainfall 1.3s steps(6, end) infinite; }
+.chapter-scene .chapter-water { animation: chapter-warmth 4s steps(3, end) infinite alternate; }
+.chapter-scene .chapter-flame { transform-box: fill-box; transform-origin: center bottom; animation: chapter-flicker 1s steps(2, end) infinite; }
+.chapter-scene .chapter-ember { animation: chapter-embers 4s steps(8, end) infinite; }
+.chapter-scene .pixel-traveller { width: 64px; height: 96px; bottom: 5%; left: calc(47% - 32px); image-rendering: pixelated; }
+.chapter-scene-1 .pixel-traveller { left: calc(49% - 32px); }
+.chapter-scene-2 .pixel-traveller { left: calc(49% - 32px); }
+.chapter-scene-3 .pixel-traveller { left: calc(60% - 32px); }
+.chapter-scene-4 .pixel-traveller { left: calc(53% - 32px); }
+.pixel-body { animation: pixel-breathe 3s steps(2, end) infinite; }
+.pixel-lantern { animation: chapter-warmth 3s steps(3, end) infinite alternate; }
+.quest-landscape.chapter-scene > .trail-location { top: 16px; left: 16px; border: 2px solid #d2af80; border-radius: 2px; background: #453f4bea; box-shadow: 3px 3px 0 #252b3b88, inset 0 0 0 2px #68586a; color: #ffe1ac; padding: 7px 12px; font: 600 10px/1.4 ui-monospace, monospace; letter-spacing: 1.5px; }
+@keyframes pixel-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes chapter-twinkle { from { opacity: .35; } to { opacity: 1; } }
+@keyframes chapter-drift { 0% { transform: translate(0, 0); opacity: .2; } 50% { opacity: .95; } 100% { transform: translate(4px, -6px); opacity: .3; } }
+@keyframes chapter-warmth { from { opacity: .76; } to { opacity: 1; } }
+@keyframes chapter-smoke { from { transform: translate(0, 3px); opacity: .5; } to { transform: translate(-3px, -8px); opacity: 0; } }
+@keyframes chapter-rainfall { from { transform: translate(0, -5px); } to { transform: translate(0, 8px); } }
+@keyframes chapter-flicker { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.85); } }
+@keyframes chapter-embers { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .8; } 100% { transform: translate(4px, -16px); opacity: 0; } }
+@media (max-width: 600px) { .chapter-scene .pixel-traveller { width: 48px; height: 72px; margin-left: 8px; bottom: 4%; } .quest-landscape.chapter-scene > .trail-location { top: 10px; left: 10px; font-size: 8px; padding: 5px 9px; } }
+@media (prefers-reduced-motion: reduce) { .chapter-scene * { animation: none !important; } }
+/* Full story settings keep the traveller at the same scale as the scene's people. */
+.chapter-scene.story-scene .pixel-traveller { width: 8.3333%; height: auto; left: 19%; bottom: 7%; margin-left: 0; }
+.chapter-scene.story-scene-fork .pixel-traveller { left: 43%; bottom: 2%; }
+.chapter-scene.story-scene-market .pixel-traveller { left: 43%; bottom: 5%; }
+.chapter-scene.story-scene .trail-location { max-width: calc(100% - 32px); font-size: clamp(7px, 1vw, 10px); }

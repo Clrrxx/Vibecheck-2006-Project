@@ -1,0 +1,114 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        "questResults": {
+          "latest": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['questionnaireVersion', 'name', 'avatar', 'title', 'answers', 'traits', 'savedAt'])",
+            "questionnaireVersion": {
+              ".validate": "newData.val() === 1"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 24"
+            },
+            "avatar": {
+              ".validate": "newData.val() === '✦' || newData.val() === '☾' || newData.val() === '◇' || newData.val() === '❋'"
+            },
+            "title": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "savedAt": {
+              ".validate": "newData.isNumber() && newData.val() <= now"
+            },
+            "answers": {
+              ".validate": "newData.hasChildren(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14'])",
+              "$answer": {
+                ".validate": "$answer.matches(/^(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14)$/) && newData.hasChildren(['encounter', 'choiceIndex', 'trait', 'score'])",
+                "encounter": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 14 && newData.val() % 1 === 0"
+                },
+                "choiceIndex": {
+                  ".validate": "newData.val() === 0 || newData.val() === 1 || newData.val() === 2"
+                },
+                "trait": {
+                  ".validate": "newData.val() === 'O' || newData.val() === 'C' || newData.val() === 'E' || newData.val() === 'A' || newData.val() === 'N'"
+                },
+                "score": {
+                  ".validate": "newData.val() === 1 || newData.val() === 3 || newData.val() === 5"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "traits": {
+              ".validate": "newData.hasChildren(['O', 'C', 'E', 'A', 'N'])",
+              "$trait": {
+                ".validate": "$trait.matches(/^(O|C|E|A|N)$/) && newData.hasChildren(['name', 'average', 'position', 'description', 'meaning', 'gameAngle', 'low', 'high'])",
+                "name": {
+                  ".validate": "newData.isString() && newData.val().length <= 40"
+                },
+                "average": {
+                  ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+                },
+                "position": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+                },
+                "description": {
+                  ".validate": "newData.isString() && newData.val().length <= 500"
+                },
+                "meaning": {
+                  ".validate": "newData.isString() && newData.val().length <= 500"
+                },
+                "gameAngle": {
+                  ".validate": "newData.isString() && newData.val().length <= 500"
+                },
+                "low": {
+                  ".validate": "newData.isString() && newData.val().length <= 80"
+                },
+                "high": {
+                  ".validate": "newData.isString() && newData.val().length <= 80"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "profile": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['firstName', 'lastName'])",
+          "firstName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+          },
+          "lastName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "steam": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        },
+        "steamSnapshots": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      }
+    }
+  }
+}

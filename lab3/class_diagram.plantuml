@@ -1,0 +1,635 @@
+@startuml
+' vibecheck.gg - Detailed class diagram (Boundary / Controller / Entity), Lab 3
+' Attributes and operations follow the current implementation in vibecheck/src
+' and vibecheck/server. Gamer Matching and Behaviour Monitoring are not built
+' yet and keep their Lab 2 design.
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype polyline
+skinparam nodesep 35
+skinparam ranksep 70
+skinparam defaultFontSize 13
+skinparam ArrowColor #4A5568
+skinparam ArrowThickness 1.2
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+skinparam ArrowFontColor #1A202C
+skinparam packageStyle rectangle
+skinparam package {
+    BackgroundColor #FBFBFC
+    BorderColor #A0AEC0
+    FontSize 15
+    FontStyle bold
+}
+skinparam class {
+    BackgroundColor<<boundary>> #EBF3FB
+    BorderColor<<boundary>> #2B6CB0
+    BackgroundColor<<controller>> #FEF9E7
+    BorderColor<<controller>> #B7791F
+    BackgroundColor<<entity>> #EDF7ED
+    BorderColor<<entity>> #276749
+}
+
+title vibecheck.gg - Detailed Class Diagram (Lab 3)
+
+legend top left
+|=      |= Layer |
+|<#EBF3FB>| Boundary |
+|<#FEF9E7>| Controller |
+|<#EDF7ED>| Entity |
+|  ..>  | depends on |
+|  *--  | composition |
+|  o--  | aggregation |
+|  --   | association |
+| (planned) | designed, not built yet (package or operation) |
+endlegend
+
+' =======================================================
+' AUTHENTICATION
+' =======================================================
+package "Authentication" as AuthPkg {
+    class LoginUI <<boundary>> {
+        - email: String
+        - password: String
+        - rememberMe: boolean
+        - showPassword: boolean
+        - error: String
+        - isSubmitting: boolean
+        + handleLogin(event: SubmitEvent): Promise<void>
+        + togglePasswordVisibility(): void
+        + showLoginError(code: String): void
+    }
+
+    class SignupUI <<boundary>> {
+        - firstName: String
+        - lastName: String
+        - email: String
+        - password: String
+        - isTermsAgreed: boolean
+        - showPassword: boolean
+        - error: String
+        - isSubmitting: boolean
+        + handleSignup(event: SubmitEvent): Promise<void>
+        + togglePasswordVisibility(): void
+        + showSignupError(msg: String): void
+    }
+
+    class ProtectedRoute <<boundary>> {
+        - session: SessionState
+        + render(): View
+        + redirectToLogin(from: Location): void
+        + showSessionError(): void
+    }
+
+    class AuthController <<controller>> {
+        + login(email: String, password: String, remember: boolean): Promise<User>
+        + signup(firstName: String, lastName: String, email: String, password: String): Promise<User>
+        + logout(): Promise<void>
+        + getLoginDestination(state: RouteState, fallback: String): String
+        + watchSession(onChange: Callback): Unsubscribe
+        + deleteAccount(userId: String): Promise<boolean> (planned)
+    }
+
+    class FirebaseAuthAdapter <<boundary>> {
+        + setPersistence(mode: Persistence): Promise<void>
+        + signInWithEmailAndPassword(email: String, password: String): Promise<User>
+        + createUserWithEmailAndPassword(email: String, password: String): Promise<User>
+        + updateProfile(user: User, displayName: String): Promise<void>
+        + signOut(): Promise<void>
+        + getIdToken(user: User): Promise<String>
+    }
+}
+
+' =======================================================
+' ASSESSMENT (Big Five quest)
+' =======================================================
+package "Assessment" as QuestPkg {
+    class QuestionnaireUI <<boundary>> {
+        - step: int
+        - answers: List<Integer>
+        - adventurerName: String
+        - avatar: String
+        - showReaction: boolean
+        - saveError: boolean
+        + startQuest(name: String, avatar: String): void
+        + selectChoice(choiceIndex: int): void
+        + confirmChoice(): void
+        + changeChoice(): void
+        + move(step: int): void
+        + goBack(): void
+        + saveAndExit(): void
+    }
+
+    class ProfileResultUI <<boundary>> {
+        - saveStatus: SaveStatus
+        + displayResults(traits: List<TraitScore>): void
+        + displayGamerType(title: String): void
+        + renderRadarChart(traits: Map<String, TraitScore>): void
+        + showSaveStatus(status: SaveStatus): void
+        + onRetrySave(): void
+        + onPlayAgain(): void
+    }
+
+    class QuestController <<controller>> {
+        + readSavedQuest(uid: String): QuestProgress
+        + saveQuestProgress(uid: String, progress: QuestProgress): boolean
+        + scoreQuest(answers: List<Integer>): List<TraitScore>
+        + determineTitle(traits: List<TraitScore>): String
+        + buildQuestResult(answers: List<Integer>, name: String, avatar: String): QuestResult
+        + saveQuestResult(uid: String, result: QuestResult): Promise<void>
+        + cacheQuestResult(uid: String, result: QuestResult): void
+        + readLocalQuestResult(uid: String): QuestResult
+        + watchLatestQuestResult(uid: String, onChange: Callback): Unsubscribe
+    }
+
+    class Encounter <<entity>> {
+        - index: int
+        - title: String
+        - story: String
+        - prompt: String
+        - trait: String
+        - reaction: String
+        + getChoice(index: int): Choice
+    }
+
+    class Choice <<entity>> {
+        - text: String
+        - score: int
+    }
+
+    class Answer <<entity>> {
+        - encounter: int
+        - choiceIndex: int
+        - trait: String
+        - score: int
+    }
+
+    class QuestResult <<entity>> {
+        - questionnaireVersion: int
+        - name: String
+        - avatar: String
+        - title: String
+        - savedAt: DateTime
+        + getStrongestTrait(): TraitScore
+        + isNewerThan(other: QuestResult): boolean
+    }
+
+    class TraitScore <<entity>> {
+        - key: String
+        - name: String
+        - average: Float
+        - position: Float
+        - description: String
+        - low: String
+        - high: String
+        + getBand(): String
+    }
+}
+
+' =======================================================
+' ACCOUNT & STEAM
+' =======================================================
+package "Account & Steam" as AccountPkg {
+    class UpdateProfileUI <<boundary>> {
+        - firstName: String
+        - lastName: String
+        - saving: boolean
+        - steamBusy: boolean
+        - message: StatusMessage
+        + handleSave(): Promise<void>
+        + connectSteam(): Promise<void>
+        + syncSteam(): Promise<void>
+        + disconnectSteam(): Promise<void>
+        + showSteamResult(result: String, reason: String): void
+        + displayTopGames(games: List<OwnedGame>): void
+        + onSelectManualEntry(): void (planned)
+        + onSubmitManualGame(gameTitle: String): void (planned)
+    }
+
+    class UserProfileController <<controller>> {
+        + saveAccountProfile(uid: String, firstName: String, lastName: String): Promise<void>
+        + watchAccountProfile(uid: String, onChange: Callback): Unsubscribe
+        + getDisplayName(user: User, profile: AccountProfile): String
+        + getProfile(uid: String): Promise<UserProfile>
+        + saveProfile(uid: String, profile: UserProfile): Promise<void>
+        + readLocalProfile(uid: String): UserProfile
+        + startSteamLink(user: User): Promise<String>
+        + refreshSteam(user: User): Promise<SyncSummary>
+        + unlinkSteam(user: User): Promise<void>
+        + addManualGame(uid: String, gameTitle: String): Promise<boolean> (planned)
+    }
+
+    class SteamLinkController <<controller>> {
+        - pendingStates: Map<String, PendingLink>
+        + startLink(uid: String): String
+        + handleCallback(query: OpenIdResponse): Redirect
+        + syncSteam(uid: String, steamId: String): Promise<SteamAccount>
+        + unlink(uid: String): Promise<void>
+        - requireUser(idToken: String): Promise<String>
+        - createState(uid: String): String
+        - consumeState(state: String): String
+    }
+
+    class SteamApiAdapter <<boundary>> {
+        - apiKey: String
+        + buildLoginUrl(returnTo: String): String
+        + verifyOpenIdResponse(params: Map<String, String>): Promise<boolean>
+        + getPlayerSummary(steamId: String): Promise<SteamPlayer>
+        + getOwnedGames(steamId: String): Promise<List<OwnedGame>>
+    }
+
+    class AccountProfile <<entity>> {
+        - firstName: String
+        - lastName: String
+        - updatedAt: DateTime
+        + getFullName(): String
+    }
+
+    class UserProfile <<entity>> {
+        - archetypeTitle: String
+        - age: int
+        - traitScores: Map<String, Integer>
+        - updatedAt: DateTime
+        + getTraitScore(trait: String): int
+    }
+
+    class SteamAccount <<entity>> {
+        - steamId: String
+        - personaName: String
+        - avatar: String
+        - profileUrl: String
+        - gamesVisible: boolean
+        - gameCount: int
+        - totalMinutes: int
+        - twoWeekMinutes: int
+        - lastSynced: DateTime
+        + getTopGames(n: int): List<OwnedGame>
+    }
+
+    class OwnedGame <<entity>> {
+        - appId: int
+        - name: String
+        - minutesTotal: int
+        - minutesLast2Weeks: int
+        + getHours(): Float
+    }
+
+    class PlaytimeSnapshot <<entity>> {
+        - at: DateTime
+        - totalMinutes: int
+        - twoWeekMinutes: int
+    }
+}
+
+' =======================================================
+' DASHBOARD
+' =======================================================
+package "Dashboard" as HomePkg {
+    class HomeUI <<boundary>> {
+        - menuOpen: boolean
+        - displayName: String
+        - report: QuestResult
+        + toggleMenu(): void
+        + renderPersonalityStats(report: QuestResult): void
+        + renderRadarChart(traits: Map<String, TraitScore>): void
+        + showDiscoverHero(): void
+        + navigate(path: String): void
+    }
+}
+
+' Shared entity: the signed-in account every feature works with
+class User <<entity>> {
+    - uid: String
+    - email: String
+    - displayName: String
+    - isAnonymous: boolean
+    - createdAt: DateTime
+    - isMatchingEnabled: boolean
+    - blockedUserIds: List<String>
+    + blockUser(targetId: String): void
+    + isBlocked(targetId: String): boolean
+    + enableMatching(): void
+    + disableMatching(): void
+}
+
+' =======================================================
+' GAME RECOMMENDATION
+' =======================================================
+package "Game Recommendation" as RecPkg {
+    class GameRecommendationUI <<boundary>> {
+        - genreFilter: String
+        - platformFilter: String
+        - status: LoadStatus
+        - notice: String
+        - savedGames: List<SavedGame>
+        + changeFilter(name: String, value: String): void
+        + keepInferredGenre(): void
+        + toggleSave(game: Game): void
+        + openDetails(gameId: String): void
+        + scrollTrending(direction: int): void
+        + displayCurated(games: List<Game>): void
+        + displayTrending(games: List<Game>): void
+        + showNotice(notice: String): void
+        + showProfileGate(): void
+    }
+
+    class GameDetailUI <<boundary>> {
+        - gameId: String
+        - game: Game
+        - failed: boolean
+        + open(): void
+        + close(): void
+        + displayGameDetails(game: Game): void
+    }
+
+    class GameRecommendationController <<controller>> {
+        + getPersonalizedGames(profile: UserProfile, genre: String, platform: String): Promise<PersonalizedResult>
+        + getTrendingGames(profile: UserProfile, genre: String, platform: String): Promise<List<Game>>
+        + getGameDetails(gameId: String): Promise<Game>
+        + matchGamesByTraits(games: List<Game>, traits: Map<String, Integer>): List<Game>
+        + filterByAgeRating(games: List<Game>, userAge: int): List<Game>
+        + genreFit(genre: Genre, traits: Map<String, Integer>): Float
+        + topGenreFor(traits: Map<String, Integer>): Genre
+        + recommendationKey(profile: UserProfile, genre: String, platform: String): String
+        + readRecommendations(key: String): GameRecommendation
+        + saveFavorites(games: List<SavedGame>): void
+        + logInteraction(entry: InteractionLogEntry): void
+    }
+
+    class RAWGApiAdapter <<boundary>> {
+        - baseUrl: String
+        - apiKey: String
+        + fetchGames(params: Map<String, String>): Promise<List<RawGame>>
+        + fetchGame(gameId: String): Promise<RawGame>
+        + toGame(raw: RawGame): Game
+    }
+
+    class Game <<entity>> {
+        - gameId: String
+        - title: String
+        - genre: String
+        - genreSlugs: List<String>
+        - tags: List<String>
+        - ageRating: Integer
+        - esrb: String
+        - rating: Float
+        - isTrending: boolean
+        - cover: String
+        - description: String
+        - relevanceScore: Float
+        + isAllowedFor(age: int): boolean
+    }
+
+    class Genre <<entity>> {
+        - slug: String
+        - label: String
+        - adjacent: List<String>
+        - affinity: Map<String, Float>
+    }
+
+    class Platform <<entity>> {
+        - id: String
+        - label: String
+    }
+
+    class GameRecommendation <<entity>> {
+        - cacheKey: String
+        - inferredGenre: String
+        - notice: String
+        - fetchedAt: DateTime
+        + isFresh(now: DateTime): boolean
+    }
+
+    class SavedGame <<entity>> {
+        - gameId: String
+        - title: String
+    }
+
+    class InteractionLogEntry <<entity>> {
+        - type: String
+        - gameId: String
+        - filterValue: String
+        - at: DateTime
+    }
+}
+
+' =======================================================
+' GAMER MATCHING (planned)
+' =======================================================
+package "Gamer Matching (planned)" as MatchPkg {
+    class GamerMatchingUI <<boundary>> {
+        - selectedArchetypeFilter: String
+        - compatibilityRangeMin: int
+        - compatibilityRangeMax: int
+        + displayCompatibleGamers(matches: List<GamerMatch>): void
+        + onSelectGamer(gamerId: String): void
+        + onApplyFilter(archetype: String, minScore: int, maxScore: int): void
+        + onRefreshMatches(): void
+        + showNoMatchesFound(): void
+    }
+
+    class GamerDetailUI <<boundary>> {
+        - gamerId: String
+        + displayGamerInfo(gamer: User, match: GamerMatch): void
+        + onBlockGamer(gamerId: String): void
+        + onSendFriendRequest(gamerId: String): void
+        + onBack(): void
+    }
+
+    class GamerMatchingController <<controller>> {
+        + requestGamerMatches(userId: String): List<GamerMatch>
+        + calculateCompatibility(p1: UserProfile, p2: UserProfile): Float
+        + filterBlockedGamers(candidates: List<User>, blockedIds: List<String>): List<User>
+        + filterMatchingEnabledGamers(candidates: List<User>): List<User>
+        + getGamerPublicProfile(targetGamerId: String): User
+        + blockGamer(userId: String, targetId: String): void
+        + sendFriendRequest(fromUserId: String, toUserId: String): FriendRequest
+    }
+
+    class GamerMatch <<entity>> {
+        - matchId: String
+        - currentUserId: String
+        - matchedUserId: String
+        - compatibilityScore: Float
+        - commonGenres: List<String>
+        - createdAt: DateTime
+    }
+
+    class FriendRequest <<entity>> {
+        - requestId: String
+        - fromUserId: String
+        - toUserId: String
+        - status: String
+        - sentAt: DateTime
+    }
+}
+
+' =======================================================
+' BEHAVIOUR MONITORING (planned)
+' =======================================================
+package "Behaviour Monitoring (planned)" as MonPkg {
+    class BehaviourMonitoringUI <<boundary>> {
+        + displayWeeklySummary(summary: BehaviourSummary): void
+        + renderPlaytimeBarChart(hoursPerDay: List<Float>): void
+        + displayRiskLevel(risk: String): void
+        + onSetAlerts(rule: WarningRule): void
+        + onViewActivityLog(): void
+        + displayActivityLog(activities: List<GamingActivity>): void
+    }
+
+    class NotificationUI <<boundary>> {
+        + showBreakReminder(alert: Notification): void
+        + onDismiss(): void
+        + onSetTimer(minutes: int): void
+    }
+
+    class BehaviourMonitoringController <<controller>> {
+        + recordGamingSession(session: GamingActivity): void
+        + getPlaytimeBetween(userId: String, from: DateTime, to: DateTime): Float
+        + evaluateAddictionRisk(userId: String): boolean
+        + checkWarningSigns(totalHours: Float, consecutiveDays: int): boolean
+        + dispatchBreakReminder(userId: String): Notification
+        + generateWeeklySummary(userId: String): BehaviourSummary
+        + getActivityLog(userId: String): List<GamingActivity>
+        + setAlertThreshold(userId: String, rule: WarningRule): boolean
+    }
+
+    class GamingActivity <<entity>> {
+        - activityId: String
+        - userId: String
+        - gameId: String
+        - sessionStart: DateTime
+        - sessionEnd: DateTime
+        - durationMinutes: int
+    }
+
+    class BehaviourSummary <<entity>> {
+        - summaryId: String
+        - userId: String
+        - periodStart: Date
+        - periodEnd: Date
+        - totalPlayHours: Float
+        - previousWeekDiffPct: Float
+    }
+
+    class WarningRule <<entity>> {
+        - ruleId: String
+        - maxContinuousHours: Float
+        - maxWeeklyHours: Float
+        - alertMessage: String
+    }
+
+    class Notification <<entity>> {
+        - notificationId: String
+        - userId: String
+        - title: String
+        - body: String
+        - timestamp: DateTime
+        - isDismissed: boolean
+    }
+}
+
+' =======================================================
+' DEPENDENCIES (boundary -> controller -> entity)
+' Layout: Authentication, Assessment and Account & Steam sit above the
+' shared User entity; the other features sit below it, drawn bottom-up
+' (entities nearest User) so every association line stays short.
+' =======================================================
+
+' --- Dashboard ---
+HomeUI .up.> QuestController
+HomeUI .up.> UserProfileController
+HomeUI ..> GameRecommendationController
+HomeUI ..> GamerMatchingController
+HomeUI ..> BehaviourMonitoringController
+
+' --- Authentication ---
+LoginUI ..> AuthController
+SignupUI ..> AuthController
+ProtectedRoute ..> AuthController
+AuthController ..> FirebaseAuthAdapter
+AuthController ..> User
+AuthController ..> AccountProfile
+
+' --- Assessment ---
+QuestionnaireUI ..> QuestController
+ProfileResultUI ..> QuestController
+QuestController ..> Encounter
+QuestController ..> QuestResult
+
+' --- Account & Steam ---
+UpdateProfileUI ..> UserProfileController
+UserProfileController ..> FirebaseAuthAdapter
+UserProfileController ..> AccountProfile
+UserProfileController ..> UserProfile
+UserProfileController ..> SteamLinkController
+SteamLinkController ..> SteamApiAdapter
+SteamLinkController ..> SteamAccount
+SteamLinkController ..> PlaytimeSnapshot
+
+' --- Game Recommendation ---
+GameRecommendationUI .up.> GameRecommendationController
+GameDetailUI .up.> GameRecommendationController
+GameRecommendationUI .right.> GameDetailUI
+GameRecommendationController .up.> RAWGApiAdapter
+GameRecommendationController .up.> Game
+GameRecommendationController .up.> Genre
+GameRecommendationController .up.> Platform
+GameRecommendationController .up.> GameRecommendation
+GameRecommendationController .up.> SavedGame
+GameRecommendationController .up.> InteractionLogEntry
+GameRecommendationController .up.> UserProfile
+
+' --- Gamer Matching (planned) ---
+GamerMatchingUI .up.> GamerMatchingController
+GamerDetailUI .up.> GamerMatchingController
+GamerMatchingUI .right.> GamerDetailUI
+GamerMatchingController .up.> GamerMatch
+GamerMatchingController .up.> FriendRequest
+GamerMatchingController .up.> UserProfile
+GamerMatchingController .up.> User
+
+' --- Behaviour Monitoring (planned) ---
+BehaviourMonitoringUI .up.> BehaviourMonitoringController
+NotificationUI .up.> BehaviourMonitoringController
+BehaviourMonitoringController .up.> GamingActivity
+BehaviourMonitoringController .up.> BehaviourSummary
+BehaviourMonitoringController .up.> WarningRule
+BehaviourMonitoringController .up.> Notification
+BehaviourMonitoringController .up.> PlaytimeSnapshot
+
+' =======================================================
+' ENTITY ASSOCIATIONS & MULTIPLICITIES
+' =======================================================
+User "1" *-up- "0..1" AccountProfile : has
+User "1" *-up- "0..1" UserProfile : owns
+User "1" *-up- "0..1" SteamAccount : links
+User "1" *-up- "0..*" PlaytimeSnapshot : records
+User "1" *-up- "0..1" QuestResult : latest result
+SteamAccount "1" *-- "0..*" OwnedGame : owns
+QuestResult "1" *-- "15" Answer : answers
+QuestResult "1" *-- "5" TraitScore : traits
+Answer "0..*" --> "1" Encounter : answers
+Encounter "1" *-- "3" Choice : offers
+
+User "1" -- "0..*" SavedGame : saves
+User "1" -- "0..*" GameRecommendation : receives
+User "1" -- "0..*" InteractionLogEntry : logs
+SavedGame "0..*" --> "1" Game : refers to
+GameRecommendation "0..*" o-- "0..*" Game : curated / trending
+Game "0..*" --> "1..*" Genre : classified as
+Genre "0..*" --> "0..*" Genre : adjacent
+
+User "1" -- "0..*" GamerMatch : evaluates
+User "1" -- "0..*" FriendRequest : sends / receives
+
+User "1" *-- "0..*" GamingActivity : logs
+User "1" *-- "0..*" BehaviourSummary : summarizes
+User "1" *-- "0..*" Notification : receives
+GamingActivity "0..*" --> "0..1" Game : associated with
+
+' Keep the dashboard hub in the middle band, beside User
+User -[hidden]right- HomeUI
+
+@enduml

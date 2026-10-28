@@ -1,0 +1,91 @@
+@startuml
+skinparam roundcorner 10
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor #2B6CB0
+  ArrowColor #2B6CB0
+}
+
+title vibecheck.gg - Initial Dialog Map (UI State Machine)
+
+[*] --> LoginUI
+
+state "Authentication" as Auth {
+    state LoginUI : "Log In"
+    state SignupUI : "Create Account"
+}
+
+state "Assessment & Profiling" as Profiling {
+    state QuestionnaireUI : "Rate Statements"
+    state ProfileResultUI : "Radar Chart & Archetype"
+    state ArchetypesDirectoryUI : "Archetypes Reference"
+    state ResearchUI : "Methodology"
+}
+
+state "Main Application (vibecheck.gg)" as Main {
+    state HomeUI : "Dashboard Navigation"
+    
+    state "Gamer Matching" as Matching {
+        state GamerMatchingUI : "Compatibility Hub"
+        state GamerDetailUI : "Player Card"
+    }
+    
+    state "Game Recommendations" as Recs {
+        state GameRecommendationUI : "Curated Playlists"
+        state GameDetailUI : "Game Info"
+    }
+    
+    state "Behaviour Monitoring" as Analytics {
+        state BehaviourMonitoringUI : "Analytics Dashboard"
+        state NotificationUI : "Break Reminder Alert"
+    }
+}
+
+' Auth Flow
+LoginUI --> SignupUI : Select "Sign Up"
+SignupUI --> LoginUI : Select "Back to Login"
+
+LoginUI --> HomeUI : Submit Login\n[valid credentials && profile exists]
+LoginUI --> QuestionnaireUI : Submit Login\n[valid credentials && profile missing]
+LoginUI --> LoginUI : Submit Login\n[invalid credentials] / Show Error
+
+SignupUI --> QuestionnaireUI : Submit Registration\n[valid details]
+SignupUI --> SignupUI : Submit Registration\n[invalid details] / Show Error
+
+' Profiling Flow
+QuestionnaireUI --> ProfileResultUI : Submit Assessment\n[all required questions answered] / Calculate Profile
+
+QuestionnaireUI --> QuestionnaireUI : Submit Assessment\n[incomplete] / Show Validation Error
+
+ProfileResultUI --> QuestionnaireUI : Select "Retake Assessment"
+ProfileResultUI --> HomeUI : Select "Home"
+
+HomeUI --> ProfileResultUI : Select "Profile"
+HomeUI --> QuestionnaireUI : Select "Quiz"
+
+' Global Navigation (Top Bar)
+HomeUI --> QuestionnaireUI : Click "Quiz" Nav
+HomeUI --> ArchetypesDirectoryUI : Click "Archetypes" Nav
+HomeUI --> ResearchUI : Click "Research" Nav
+
+' Feature 1: Gamer Matching
+
+
+HomeUI --> GamerMatchingUI : Access "Matches"
+GamerMatchingUI --> GamerDetailUI : Click "View Profile"
+GamerDetailUI --> GamerMatchingUI : Back / Block User
+
+' Feature 2: Game Recommendations
+HomeUI --> GameRecommendationUI : Access "Games"
+GameRecommendationUI --> GameDetailUI : Click "View Details"
+GameDetailUI --> GameRecommendationUI : Back / Save to Favorites
+
+' Feature 3: Behaviour Monitoring
+HomeUI --> BehaviourMonitoringUI : Access "Analytics"
+BehaviourMonitoringUI --> NotificationUI : System Triggers Alert
+NotificationUI --> BehaviourMonitoringUI : Click "Dismiss / Set Timer"
+
+' Session
+HomeUI --> LoginUI : Select "Log Out"
+
+@enduml

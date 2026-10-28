@@ -1,0 +1,10 @@
+.gamer-character {
+  display: block;
+  width: 230px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+}

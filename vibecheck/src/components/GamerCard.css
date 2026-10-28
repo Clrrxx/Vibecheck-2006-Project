@@ -1,0 +1,39 @@
+.gamer-card-section { display:grid; justify-items:center; gap:14px; margin:24px 0; padding:28px 20px; color:#eee6f7; background:radial-gradient(ellipse at 50% 45%,#6e468c20,transparent 70%),#14111d; border:1px solid #c5a36b40; border-radius:18px; text-align:center; font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif; }
+.gamer-card-eyebrow { color:#ddc38e; font-size:10px; font-weight:750; letter-spacing:1.6px; }
+.gamer-card-copy h2 { margin:8px 0 5px; color:#f4e9d7; font-size:28px; letter-spacing:-.6px; }
+.gamer-card-copy p { margin:0; color:#afa1bf; font-size:12px; }
+.gamer-card-preview { width:min(100%,350px); }
+.gamer-card-preview canvas { display:none; width:100%; height:auto; aspect-ratio:5/7; border-radius:17px; box-shadow:0 18px 45px #0008,0 0 30px #c2a06412; }
+.gamer-card-preview canvas.is-ready { display:block; }
+.gamer-card-section .gamer-card-download { padding:12px 22px; margin-top:0; color:#211b2b; background:linear-gradient(130deg,#efdfb1,#c4a36b); border:1px solid #ead19b; border-radius:10px; font:700 13px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; cursor:pointer; }
+.gamer-card-download:disabled { opacity:.4; cursor:wait; }
+.gamer-card-save-hint { color:#9d90ae; font-size:10px; }
+.gamer-card-status { margin:0; color:#d4bfeb; font-size:12px; }
+.gamer-card-status:empty { display:none; }
+.gamer-card-dialog { width:min(570px,calc(100% - 24px)); max-height:92vh; padding:16px; color:#eee6f7; background:#14111d; border:1px solid #c5a36b66; border-radius:20px; }
+.gamer-card-dialog::backdrop { background:#07060cdb; }
+.gamer-card-dialog .gamer-card-section { margin:0; padding:12px 8px; border:0; }
+.gamer-card-close { display:block; margin-left:auto; width:34px; height:34px; color:#dacbe8; background:#ffffff0a; border:1px solid #ffffff20; border-radius:8px; cursor:pointer; }
+.gamer-card-section :focus-visible,.gamer-card-dialog :focus-visible { outline:2px solid #dfc792; outline-offset:4px; }
+
+.gamer-card-preview { perspective:1000px; padding:12px; width:min(100%,374px); overflow:visible; }
+.gamer-card-stage { --card-rx:0deg; --card-ry:0deg; --foil-x:50%; --foil-y:50%; --foil-angle:120deg; display:none; position:relative; width:100%; border-radius:18px; touch-action:pan-y; outline-offset:7px!important; cursor:grab; user-select:none; -webkit-user-select:none; }
+.gamer-card-stage.is-ready { display:block; }
+.gamer-card-stage[data-dragging="true"] { cursor:grabbing; }
+.gamer-card-surface { position:relative; isolation:isolate; border-radius:18px; transform:rotateX(var(--card-rx)) rotateY(var(--card-ry)); transform-style:preserve-3d; transition:transform .22s ease-out,box-shadow .22s ease-out; box-shadow:0 24px 46px #0009,0 0 26px #bd96ed13; }
+.gamer-card-stage:is(:hover,:focus-visible) .gamer-card-surface { box-shadow:0 30px 55px #000b,-8px 0 28px #83e9ea18,8px 0 28px #dd94ec1c; }
+.gamer-card-stage[data-dragging="true"] .gamer-card-surface { transition:none; }
+.gamer-card-surface canvas.is-ready { display:block; border-radius:18px; box-shadow:none; }
+.gamer-card-surface::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; box-shadow:inset 0 0 0 1px #fff5,inset 0 0 12px #d6a9f333; }
+.gamer-card-interaction-hint { color:#ae9cbe; font-size:10px; line-height:1.6; margin:0; }
+.gamer-card-controls { display:flex; justify-content:center; align-items:stretch; flex-wrap:wrap; gap:8px; }
+.gamer-card-controls button { padding:7px 11px; color:#bcaaca; background:#ffffff05; border:1px solid #cba6ed25; border-radius:8px; font:11px/1.5 Inter,ui-sans-serif,system-ui,sans-serif; cursor:pointer; }
+.gamer-card-controls button:disabled { opacity:.4; cursor:default; }
+@media(prefers-reduced-motion:reduce) { .gamer-card-surface { transform:none; transition:none; } }
+
+/* Holographic finish is always enabled; its sheen follows the card tilt. */
+.gamer-card-foil,.gamer-card-glare { position:absolute; inset:0; border-radius:inherit; pointer-events:none; transition:opacity .25s ease; }
+.gamer-card-foil { opacity:.24; mix-blend-mode:screen; background:repeating-linear-gradient(var(--foil-angle),#7ce8ff00 0%,#55eaff 9%,#ad83ff 19%,#ff74d4 29%,#ffdd78 39%,#7effca 49%,#7ce8ff00 60%); background-size:240% 240%; background-position:var(--foil-x) var(--foil-y); }
+.gamer-card-glare { opacity:.3; background:radial-gradient(ellipse at var(--foil-x) var(--foil-y),#fff8 0%,#d5ceff15 28%,transparent 60%),repeating-linear-gradient(155deg,#fff0 0 7px,#fff2 8px,#fff0 9px 13px); mix-blend-mode:screen; }
+.gamer-card-stage:is(:hover,:focus-visible) .gamer-card-foil,.gamer-card-stage[data-dragging="true"] .gamer-card-foil { opacity:.34; }
+@media(prefers-reduced-motion:reduce) { .gamer-card-foil,.gamer-card-glare { transition:none; } }

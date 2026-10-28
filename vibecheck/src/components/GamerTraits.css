@@ -1,0 +1,19 @@
+.gamer-traits { min-width:0; }
+.gamer-traits-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.gamer-traits-heading h2 { margin:0; color:#ede7f7; font-size:13px; }
+.gamer-traits button { cursor:pointer; }
+.gamer-traits-edit { padding:5px 0; color:#bf9dff; border:0; background:none; font-size:11px; font-weight:650; }
+.gamer-traits-hint { margin:5px 0 12px; color:var(--muted); font-size:11px; }
+.gamer-traits-badges { display:flex; flex-wrap:wrap; gap:7px; padding:0; margin:0; list-style:none; }
+.gamer-traits-badges li { display:flex; align-items:center; gap:6px; padding:7px 10px; color:#dfd1fc; background:#9168ff14; border:1px solid #9168ff33; border-radius:99px; font-size:11px; }
+.gamer-traits-options { display:flex; flex-wrap:wrap; gap:7px; }
+.gamer-traits-options button { display:flex; align-items:center; gap:6px; padding:7px 9px; color:#bcb5cb; background:#12111c; border:1px solid #ffffff1a; border-radius:9px; font-size:11px; }
+.gamer-traits-options button[aria-pressed="true"] { color:#eee4ff; background:#9168ff26; border-color:#a980ff99; }
+.gamer-traits-options button:disabled { opacity:.4; cursor:default; }
+.gamer-traits-controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; }
+.gamer-traits-controls small { color:var(--muted); font-size:10px; }
+.gamer-traits-controls button { padding:7px 12px; color:white; background:#7953cf; border:1px solid #bb95ff55; border-radius:8px; font-size:11px; font-weight:650; }
+.gamer-traits-note { margin:12px 0 0; color:var(--muted); font-size:10px; line-height:1.5; }
+.gamer-traits-message { margin:5px 0 0; color:#c8afea; font-size:10px; }
+.gamer-traits-message:empty { display:none; }
+.gamer-traits :focus-visible { outline:2px solid var(--light-purple); outline-offset:3px; }

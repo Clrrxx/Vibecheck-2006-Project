@@ -1,0 +1,33 @@
+.weekly-games { grid-column:1/-1; padding:28px 30px; }
+.weekly-games-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.weekly-games h2 { margin:5px 0 0; font-size:25px; letter-spacing:-.6px; line-height:1.2; }
+.weekly-games h2 > span { color:var(--light-purple); }
+.weekly-games-badge { flex:none; padding:5px 10px; color:#d6c5ff; background:#9168ff1a; border:1px solid #9168ff40; border-radius:99px; font-size:10px; }
+.weekly-games-intro { max-width:720px; margin:12px 0 24px; color:var(--muted); font-size:12px; }
+.weekly-games-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.weekly-game { min-width:0; overflow:hidden; display:flex; flex-direction:column; background:#111119; border:1px solid var(--line); border-radius:12px; transition:border-color .2s ease,transform .2s ease; }
+.weekly-game:is(:hover,:focus-within) { border-color:#b594ff66; transform:translateY(-3px); }
+.weekly-game-art { position:relative; aspect-ratio:16/9; background:linear-gradient(135deg,#49336f,#1c263a); overflow:hidden; }
+.weekly-game-art img { display:block; width:100%; height:100%; object-fit:cover; }
+.weekly-game-rank { position:absolute; top:12px; left:12px; padding:3px 9px; color:white; background:#101018d9; border:1px solid #ffffff26; border-radius:7px; font-size:15px; font-weight:800; }
+.weekly-game-body { display:flex; flex:1; flex-direction:column; padding:16px; }
+.weekly-game-genres { margin:0 0 5px; color:#b59adf; font-size:10px; }
+.weekly-game h3 { margin:0; color:#f7f5fd; font-size:17px; line-height:1.35; }
+.weekly-game-platforms { margin:7px 0 16px; color:var(--muted); font-size:10px; }
+.weekly-game-scores { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.weekly-game-rating { color:#efd08a; font-size:18px; font-weight:750; }
+.weekly-game-scale { color:var(--muted); font-size:11px; }
+.weekly-game-scores small { display:block; margin-top:3px; color:var(--muted); font-size:9px; }
+.weekly-game-metacritic { text-align:center; }
+.weekly-game-metacritic b { padding:3px 8px; color:#b5e6cc; background:#71ce9e12; border:1px solid #71ce9e50; border-radius:6px; font-size:15px; }
+.weekly-game-details { margin-top:16px; width:100%; display:flex; justify-content:space-between; padding:9px 12px; color:#ded3f8; background:#9168ff14; border:1px solid #9168ff40; border-radius:8px; font-size:11px; font-weight:650; cursor:pointer; }
+.weekly-game-details:hover { background:#9168ff2b; }
+.weekly-games :focus-visible { outline:2px solid var(--light-purple); outline-offset:3px; }
+.weekly-games-status { padding:20px 0; color:var(--muted); }
+.weekly-games-status button { margin-left:8px; padding:6px 12px; color:#eee7ff; background:#9168ff33; border:1px solid #9168ff66; border-radius:7px; cursor:pointer; }
+.weekly-games-attribution { margin:18px 0 0; color:var(--muted); text-align:right; font-size:9px; }
+.weekly-games-attribution a { color:#bca0ff; }
+@media(min-width:1450px) { .weekly-games-grid { grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; } .weekly-game-body { padding:12px; } .weekly-game h3 { font-size:14px; } }
+@media(max-width:760px) { .weekly-games { padding:24px 20px; } .weekly-games-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .weekly-games h2 { font-size:22px; } }
+@media(max-width:460px) { .weekly-games-grid { grid-template-columns:1fr; } .weekly-games-badge { display:none; } }
+@media(prefers-reduced-motion:reduce) { .weekly-game { transition:none; } .weekly-game:is(:hover,:focus-within) { transform:none; } }

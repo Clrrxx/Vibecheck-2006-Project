@@ -1,0 +1,137 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 10
+' Layout only: left-to-right ranking keeps every transition label beside its own arrow
+left to right direction
+skinparam defaultFontSize 13
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam ArrowFontSize 12
+skinparam ArrowFontColor #1A202C
+skinparam ArrowThickness 1.2
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor #2B6CB0
+  ArrowColor #2B6CB0
+  FontSize 14
+  AttributeFontSize 12
+  BackgroundColor<<planned>> #F7F7F7
+  BorderColor<<planned>> #A0AEC0
+}
+
+title vibecheck.gg - Revised Dialog Map (Lab 3)
+
+legend top left
+|= Notation |= Meaning |
+| Event [guard] / action | transition |
+| text inside a state | internal transition (stays on the screen) |
+| [H] | resume the quest at the last saved step |
+| "vibecheck" logo | on every signed-in page, returns to HomeUI |
+| QuestIntroUI, EncounterUI, ReactionUI | views of the QuestionnaireUI class |
+| ProfileGateUI | view of the GameRecommendationUI class |
+|<#F7F7F7> «planned» | designed, not built yet |
+endlegend
+
+' Opening any page checks the Firebase session first (ProtectedRoute)
+[*] --> HomeUI : [signed in]
+[*] --> LoginUI : [not signed in]
+
+state "Authentication" as Auth {
+    state LoginUI : "Log In"
+    LoginUI : Submit Login [invalid credentials] / Show Error
+    LoginUI : Toggle "Show password"
+    state SignupUI : "Create Account"
+    SignupUI : Submit Registration [invalid details] / Show Error
+    SignupUI : Toggle "Show password"
+}
+
+state "Main Application (signed in)" as Main {
+    state HomeUI : "Dashboard"
+    HomeUI : [quest result exists] / Show personality stats & radar
+    HomeUI : [no quest result] / Show "Discover your personality"
+
+    state "Assessment (Questionnaire)" as Quest {
+        [*] --> QuestIntroUI
+        state QuestIntroUI : "Name your adventurer"
+        QuestIntroUI : Type name / Pick emblem
+        state EncounterUI : "Encounter 1-15"
+        EncounterUI : Pick a choice
+        EncounterUI : Select "Back" [encounter > 1] / Previous encounter
+        state ReactionUI : "Story reaction"
+        state ProfileResultUI : "Results & Gamer Type"
+        ProfileResultUI : [save failed] Select "Retry saving" / Save Result
+    }
+
+    state UpdateProfileUI : "Update Profile / Link Steam"
+    UpdateProfileUI : Save Changes [names valid] / Show "Profile saved"
+    UpdateProfileUI : Save Changes [name missing] / Show Error
+    UpdateProfileUI : Select "Connect Steam" / Link account, Show Result
+    UpdateProfileUI : Select "Refresh Steam data" / Show Result
+    UpdateProfileUI : Select "Disconnect" [confirmed] / Remove Steam data
+
+    state "Game Recommendations" as Recs {
+        state ProfileGateUI : "Finish your gamer profile first"
+        state GameRecommendationUI : "Signature & Trending Games"
+        GameRecommendationUI : Change genre or platform / Reload list
+        GameRecommendationUI : Select "Save to favorites" / Toggle saved
+        GameRecommendationUI : Select "Keep genre" / Fix genre filter
+        GameRecommendationUI : [RAWG unreachable] / Show cached list notice
+        state GameDetailUI : "Game details dialog"
+        GameDetailUI : [load failed] / Show error
+    }
+
+    state "Gamer Matching" as Matching <<planned>> {
+        state GamerMatchingUI <<planned>> : "Compatibility Hub"
+        state GamerDetailUI <<planned>> : "Player Card"
+    }
+
+    state "Behaviour Monitoring" as Analytics <<planned>> {
+        state BehaviourMonitoringUI <<planned>> : "Gaming Insights"
+        state NotificationUI <<planned>> : "Break Reminder Alert"
+    }
+}
+
+' ---------- Authentication ----------
+LoginUI --> SignupUI : Select "Create an account"
+SignupUI --> LoginUI : Select "Log in"
+LoginUI --> HomeUI : Submit Login [valid credentials]\n/ Open Dashboard (or Assessment if requested)
+SignupUI --> QuestIntroUI : Submit Registration [valid details]\n/ Save names
+
+' ---------- Dashboard navigation ----------
+HomeUI --> Quest[H] : Select "Assessment" / "Start your quest"\n/ "View full results"
+HomeUI --> UpdateProfileUI : Select "Update Profile" / avatar
+HomeUI --> GameRecommendationUI : Select "Game Recommendations" / "View all"
+HomeUI --> GamerMatchingUI : Select "Gamer Matches"
+HomeUI --> BehaviourMonitoringUI : Select "Gaming Insights"
+
+' ---------- Assessment ----------
+QuestIntroUI --> EncounterUI : Select "Begin my adventure"
+EncounterUI --> ReactionUI : Select "Choose this path"\n[choice picked]
+ReactionUI --> EncounterUI : Select "Change choice"
+ReactionUI --> EncounterUI : Select "Continue the story"\n[encounter < 15] / Next encounter
+ReactionUI --> ProfileResultUI : Select "Reveal my profile"\n[encounter 15] / Score & save result
+EncounterUI --> QuestIntroUI : Select "Back" [encounter 1]
+ProfileResultUI --> QuestIntroUI : Select "Play again"
+ProfileResultUI --> HomeUI : Select "Back to home"
+Quest --> HomeUI : Select "Save & exit"
+
+' ---------- Account ----------
+UpdateProfileUI --> HomeUI : Select "Back to dashboard" / "Cancel"
+UpdateProfileUI --> LoginUI : Select "Log out"
+
+' ---------- Game Recommendations ----------
+GameRecommendationUI --> ProfileGateUI : [no gamer profile]
+GameRecommendationUI --> GameDetailUI : Select "View details"\nor a saved game
+GameDetailUI --> GameRecommendationUI : Select "Close"
+Recs --> Quest[H] : Select "Quiz" / "Take the questionnaire"
+
+' ---------- Planned features ----------
+GamerMatchingUI --> GamerDetailUI : Select "View Profile"
+GamerDetailUI --> GamerMatchingUI : Back / Block User
+BehaviourMonitoringUI --> NotificationUI : System Triggers Alert
+NotificationUI --> BehaviourMonitoringUI : Select "Dismiss / Set Timer"
+
+' ---------- Session ----------
+Main --> LoginUI : [session ends] / Log in again
+
+@enduml

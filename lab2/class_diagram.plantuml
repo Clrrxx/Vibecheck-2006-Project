@@ -1,0 +1,425 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 55
+skinparam class {
+    BackgroundColor<<boundary>> #EBF3FB
+    BorderColor<<boundary>> #2B6CB0
+    BackgroundColor<<controller>> #FEF9E7
+    BorderColor<<controller>> #B7791F
+    BackgroundColor<<entity>> #EDF7ED
+    BorderColor<<entity>> #276749
+}
+
+legend top left
+|=      |= Layer |
+|<#EBF3FB>| Boundary |
+|<#FEF9E7>| Controller |
+|<#EDF7ED>| Entity |
+endlegend
+
+' =======================================================
+' TOP HUB — dashboard screen every feature is reached from
+' =======================================================
+class HomeUI <<boundary>> {
+    - activeNavTab: String
+    - isSidebarOpen: boolean
+    + renderDashboard(): void
+    + onSearchGames(query: String): void
+    + toggleSidebar(): void
+}
+
+' =======================================================
+' COLUMN 1: AUTH
+' =======================================================
+class LoginUI <<boundary>> {
+    - emailInput: String
+    - passwordInput: String
+    - isRememberMeChecked: boolean
+    + onLoginSubmit(): void
+    + togglePasswordVisibility(): void
+    + showLoginError(msg: String): void
+}
+
+class SignupUI <<boundary>> {
+    - firstNameInput: String
+    - lastNameInput: String
+    - emailInput: String
+    - passwordInput: String
+    - isTermsAgreed: boolean
+    + onSignupSubmit(): void
+    + showSignupError(msg: String): void
+    + redirectToQuestionnaire(): void
+}
+
+class AuthController <<controller>> {
+    - currentSessionToken: String
+    + login(email: String, pass: String): boolean
+    + signup(user: User, pass: String): boolean
+    + logout(): void
+    + hashPassword(rawPass: String): String
+    + validatePasswordStrength(pass: String): boolean
+    + deleteAccount(userId: String): boolean
+}
+
+' =======================================================
+' COLUMN 2: GAMER PROFILE
+' =======================================================
+class QuestionnaireUI <<boundary>> {
+    - currentQuestionIndex: int
+    - totalQuestions: int
+    - selectedAnswers: Map<String, Integer>
+    + displayQuestion(q: Question): void
+    + onSelectOption(qId: String, val: int): void
+    + onNextQuestion(): void
+    + onPreviousQuestion(): void
+    + onSubmit(): void
+    + showValidationError(msg: String): void
+    + onRetake(): void
+}
+
+class ProfileResultUI <<boundary>> {
+    + displayProfile(profile: UserProfile): void
+    + renderRadarChart(traitScores: Map<String, Float>): void
+    + displayArchetypeBadge(archetype: String): void
+}
+
+class UpdateProfileUI <<boundary>> {
+    - selectedGamingPlatform: String
+    - manualGameInput: String
+    + onSelectLinkAccount(): void
+    + onSelectManualEntry(): void
+    + displaySupportedPlatforms(platforms: List<String>): void
+    + onSubmitManualGame(gameTitle: String): void
+    + showUpdateError(msg: String): void
+    + showUpdateSuccess(): void
+}
+
+class GamingPlatformAdapter <<boundary>> {
+    + authorizeAccount(platform: String, userId: String): boolean
+    + fetchOwnedGames(accountId: String): List<String>
+}
+
+class UserProfileController <<controller>> {
+    + startQuestionnaire(): List<Question>
+    + validateResponses(responses: List<QuestionResponse>): boolean
+    + submitResponses(userId: String, resps: List<QuestionResponse>): UserProfile
+    + calculateBigFiveScores(resps: List<QuestionResponse>): Map<String, Float>
+    + determinePersonalityType(scores: Map<String, Float>): String
+    + saveProfile(profile: UserProfile): boolean
+    + updateProfile(userId: String, profile: UserProfile): boolean
+    + getProfile(userId: String): UserProfile
+    + linkGamingAccount(userId: String, platform: String): GamingAccount
+    + addManualGame(userId: String, gameTitle: String): boolean
+}
+
+' =======================================================
+' COLUMN 3: GAMER MATCHING
+' =======================================================
+class GamerMatchingUI <<boundary>> {
+    - selectedArchetypeFilter: String
+    - compatibilityRangeMin: int
+    - compatibilityRangeMax: int
+    + displayCompatibleGamers(matches: List<GamerMatch>): void
+    + onSelectGamer(gamerId: String): void
+    + displayGamerInfo(gamer: User, match: GamerMatch): void
+    + onBlockGamer(gamerId: String): void
+    + onSendFriendRequest(gamerId: String): void
+    + showNoMatchesFound(): void
+    + onRefreshMatches(): void
+    + onApplyFilter(archetype: String, minScore: int, maxScore: int): void
+}
+
+class GamerMatchingController <<controller>> {
+    + requestGamerMatches(userId: String): List<GamerMatch>
+    + calculateCompatibility(p1: UserProfile, p2: UserProfile): Float
+    + filterBlockedGamers(candidates: List<User>, blockedIds: List<String>): List<User>
+    + filterMatchingEnabledGamers(candidates: List<User>): List<User>
+    + getGamerPublicProfile(targetGamerId: String): User
+    + sendFriendRequest(fromUserId: String, toUserId: String): FriendRequest
+}
+
+' =======================================================
+' COLUMN 4: GAME RECOMMENDATION
+' =======================================================
+class GameRecommendationUI <<boundary>> {
+    - selectedGenreFilter: String
+    - selectedPlatformFilter: String
+    + displayRecommendations(games: List<Game>): void
+    + displayTrendingGames(games: List<Game>): void
+    + onSelectGame(gameId: String): void
+    + displayGameDetails(game: Game): void
+    + onSaveGameToFavorites(gameId: String): void
+    + showNoRecommendationsNotice(): void
+    + onApplyFilter(genre: String, platform: String): void
+}
+
+class GameRecommendationController <<controller>> {
+    + getPersonalizedGames(userId: String): List<Game>
+    + getTrendingGames(): List<Game>
+    + matchGamesByTraits(profile: UserProfile): List<Game>
+    + getGameDetails(gameId: String): Game
+    + filterByAgeRating(games: List<Game>, userAge: int): List<Game>
+}
+
+' =======================================================
+' COLUMN 5: BEHAVIOUR MONITORING
+' =======================================================
+class BehaviourMonitoringUI <<boundary>> {
+    + displayWeeklySummary(summary: BehaviourSummary): void
+    + renderPlaytimeBarChart(hoursPerDay: List<Float>): void
+    + displayAddictionRiskLevel(risk: String): void
+    + onSetAlerts(rule: WarningRule): void
+    + onViewActivityLog(): void
+    + displayActivityLog(activities: List<GamingActivity>): void
+    + showBreakReminder(alert: Notification): void
+    + onDismiss(): void
+}
+
+class BehaviourMonitoringController <<controller>> {
+    + recordGamingSession(session: GamingActivity): void
+    + evaluateAddictionRisk(userId: String): boolean
+    + checkWarningSigns(totalHours: Float, consecutiveDays: int): boolean
+    + dispatchBreakReminder(userId: String): Notification
+    + generateWeeklySummary(userId: String): BehaviourSummary
+    + getActivityLog(userId: String): List<GamingActivity>
+    + setAlertThreshold(userId: String, rule: WarningRule): boolean
+}
+
+' =======================================================
+' ENTITY LAYER — one shared row underneath every column
+' =======================================================
+class User <<entity>> {
+    - userId: String
+    - username: String
+    - email: String
+    - passwordHash: String
+    - age: int
+    - isMatchingEnabled: boolean
+    - blockedUserIds: List<String>
+    - savedGameIds: List<String>
+    - createdAt: DateTime
+    + blockUser(targetId: String): void
+    + isBlocked(targetId: String): boolean
+    + addSavedGame(gameId: String): void
+    + enableMatching(): void
+    + disableMatching(): void
+}
+
+class GamingAccount <<entity>> {
+    - accountId: String
+    - userId: String
+    - platform: String
+    - externalAccountId: String
+    - isLinked: boolean
+    - linkedAt: DateTime
+}
+
+class UserProfile <<entity>> {
+    - profileId: String
+    - userId: String
+    - personalityType: String
+    - archetypeTitle: String
+    - traitScores: Map<String, Float>
+    - lastCalculatedDate: DateTime
+    + getTraitScore(trait: String): Float
+    + updateScores(newScores: Map<String, Float>): void
+}
+
+class Question <<entity>> {
+    - questionId: String
+    - promptText: String
+    - targetTrait: String
+    - isReversed: boolean
+    - orderIndex: int
+    + isReverseScored(): boolean
+}
+
+class QuestionResponse <<entity>> {
+    - responseId: String
+    - userId: String
+    - questionId: String
+    - selectedValue: int
+    - submittedAt: DateTime
+    + getEffectiveScore(): int
+}
+
+class GamerMatch <<entity>> {
+    - matchId: String
+    - currentUserId: String
+    - matchedUserId: String
+    - compatibilityScore: Float
+    - commonGenres: List<String>
+    - createdAt: DateTime
+}
+
+class FriendRequest <<entity>> {
+    - requestId: String
+    - fromUserId: String
+    - toUserId: String
+    - status: String
+    - sentAt: DateTime
+}
+
+class Game <<entity>> {
+    - gameId: String
+    - title: String
+    - genre: String
+    - toneTag: String
+    - ageRating: int
+    - isTrending: boolean
+    - description: String
+}
+
+class GameRecommendation <<entity>> {
+    - recommendationId: String
+    - userId: String
+    - gameId: String
+    - relevanceScore: Float
+    - isFallbackTrending: boolean
+    - recommendedAt: DateTime
+}
+
+class GamingActivity <<entity>> {
+    - activityId: String
+    - userId: String
+    - gameId: String
+    - sessionStart: DateTime
+    - sessionEnd: DateTime
+    - durationMinutes: int
+}
+
+class BehaviourSummary <<entity>> {
+    - summaryId: String
+    - userId: String
+    - periodStart: Date
+    - periodEnd: Date
+    - totalPlayHours: Float
+    - previousWeekDiffPct: Float
+}
+
+class WarningRule <<entity>> {
+    - ruleId: String
+    - maxContinuousHours: Float
+    - maxWeeklyHours: Float
+    - alertMessage: String
+}
+
+class Notification <<entity>> {
+    - notificationId: String
+    - userId: String
+    - title: String
+    - body: String
+    - timestamp: DateTime
+    - isDismissed: boolean
+}
+
+' =======================================================
+' RELATIONSHIPS & COUPLING
+' =======================================================
+
+' --- Home hub -> every feature controller ---
+HomeUI ..> UserProfileController
+HomeUI ..> GameRecommendationController
+HomeUI ..> GamerMatchingController
+HomeUI ..> BehaviourMonitoringController
+
+' --- Column 1: Auth ---
+LoginUI ..> AuthController
+SignupUI ..> AuthController
+AuthController ..> User
+
+' --- Column 2: Gamer Profile ---
+QuestionnaireUI ..> UserProfileController
+ProfileResultUI ..> UserProfileController
+UpdateProfileUI ..> UserProfileController
+UserProfileController ..> GamingPlatformAdapter
+UserProfileController ..> Question
+UserProfileController ..> QuestionResponse
+UserProfileController ..> UserProfile
+UserProfileController ..> User
+UserProfileController ..> GamingAccount
+
+' --- Column 3: Gamer Matching ---
+GamerMatchingUI ..> GamerMatchingController
+GamerMatchingController ..> User
+GamerMatchingController ..> UserProfile
+GamerMatchingController ..> GamerMatch
+GamerMatchingController ..> FriendRequest
+
+' --- Column 4: Game Recommendation ---
+GameRecommendationUI ..> GameRecommendationController
+GameRecommendationController ..> Game
+GameRecommendationController ..> GameRecommendation
+GameRecommendationController ..> UserProfile
+
+' --- Column 5: Behaviour Monitoring ---
+BehaviourMonitoringUI ..> BehaviourMonitoringController
+BehaviourMonitoringController ..> GamingActivity
+BehaviourMonitoringController ..> BehaviourSummary
+BehaviourMonitoringController ..> WarningRule
+BehaviourMonitoringController ..> Notification
+
+' =======================================================
+' Entity-to-Entity Associations & Multiplicities
+' =======================================================
+User "1" *-- "0..1" UserProfile : owns
+User "1" *-- "0..*" GamingAccount : links
+User "1" o-- "0..*" QuestionResponse : submits
+Question "1" <-- "0..*" QuestionResponse : references
+
+User "1" -- "0..*" GamerMatch : evaluates
+User "1" -- "0..*" FriendRequest : sends / receives
+
+User "1" -- "0..*" GameRecommendation : receives
+Game "1" <-- "0..*" GameRecommendation : recommends
+
+User "1" *-- "0..*" GamingActivity : logs
+User "1" *-- "0..*" BehaviourSummary : summarizes
+User "1" *-- "0..*" Notification : receives
+GamingActivity "0..*" --> "0..1" Game : associated with
+
+' =======================================================
+' LAYOUT HINTS — force column stacking (Boundary -> Controller)
+' and left-to-right column order, without drawing package boxes
+' =======================================================
+
+' Column 1 stack
+LoginUI -[hidden]d- SignupUI
+SignupUI -[hidden]d- AuthController
+
+' Column 2 stack
+QuestionnaireUI -[hidden]d- ProfileResultUI
+ProfileResultUI -[hidden]d- UpdateProfileUI
+UpdateProfileUI -[hidden]d- GamingPlatformAdapter
+GamingPlatformAdapter -[hidden]d- UserProfileController
+
+' Column 3 stack
+GamerMatchingUI -[hidden]d- GamerMatchingController
+
+' Column 4 stack
+GameRecommendationUI -[hidden]d- GameRecommendationController
+
+' Column 5 stack
+BehaviourMonitoringUI -[hidden]d- BehaviourMonitoringController
+
+' Left-to-right column order across the boundary row
+LoginUI -[hidden]r- QuestionnaireUI
+QuestionnaireUI -[hidden]r- GamerMatchingUI
+GamerMatchingUI -[hidden]r- GameRecommendationUI
+GameRecommendationUI -[hidden]r- BehaviourMonitoringUI
+
+' Pull the HomeUI hub toward the center-top of the row
+QuestionnaireUI -[hidden]u- HomeUI
+
+' Keep entities roughly under their owning controller/column
+AuthController -[hidden]d- User
+UserProfileController -[hidden]d- UserProfile
+GamerMatchingController -[hidden]d- GamerMatch
+GameRecommendationController -[hidden]d- Game
+BehaviourMonitoringController -[hidden]d- GamingActivity
+
+@enduml
